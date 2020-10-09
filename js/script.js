@@ -33,6 +33,7 @@ async function fetchCountries() {
       id: numericCode,
       name: translations.pt,
       population,
+      formattedPopulation: formatNumber(population),
       flag,
     };
   });
@@ -51,7 +52,7 @@ function renderCountryList() {
   let countriesHTML = "";
 
   allCountries.forEach((country) => {
-    const { name, flag, id, population } = country;
+    const { name, flag, id, formattedPopulation } = country;
     const countryHTML = `
       <div class='country'>
         <div>
@@ -65,7 +66,7 @@ function renderCountryList() {
         <div>
           <ul>
             <li>${name}</li>
-            <li>${population}</li>
+            <li>${formattedPopulation}</li>
           </ul>
         </div>
       </div>
@@ -81,11 +82,11 @@ function renderFavorites() {
   let favoritesHTML = "";
 
   favoriteCountries.forEach((country) => {
-    const { name, flag, id, population } = country;
+    const { name, flag, id, formattedPopulation } = country;
     const favoriteCountryHTML = `
       <div class='country'>
         <div>
-          <a id='${id}' class='waves-effect waves-light btn red darken-4'>+</a>
+          <a id='${id}' class='waves-effect waves-light btn red darken-4'>-</a>
         </div>
           
         <div>
@@ -95,7 +96,7 @@ function renderFavorites() {
         <div>
           <ul>
             <li>${name}</li>
-            <li>${population}</li>
+            <li>${formattedPopulation}</li>
           </ul>
         </div>
       </div>
@@ -115,13 +116,56 @@ function renderSummary() {
     return acc + cur.population 
   }, 0)
 
-  totalPopulationList.textContent = totalPopulation
+  totalPopulationList.textContent = formatNumber(totalPopulation)
 
   const totalFavorites = favoriteCountries.reduce((acc, cur) => { 
     return acc + cur.population 
   }, 0)
 
-  totalPopulationFavorites.textContent = totalFavorites
+  totalPopulationFavorites.textContent = formatNumber(totalFavorites)
 }
 
-function handleCountryButtons() {}
+function handleCountryButtons() {
+  const countryButtons = Array.from(tabCountries.querySelectorAll('.btn'))
+  const favoriteButtons = Array.from(tabFavorites.querySelectorAll('.btn'))
+
+  countryButtons.forEach(button => {
+    button.addEventListener('click', () => addToFavorites(button.id))
+  })
+
+  favoriteButtons.forEach(button => {
+    button.addEventListener('click', () => removeFromFavorites(button.id))
+  })
+}
+
+function addToFavorites(id) {
+  const countryToAdd = allCountries.find(button => button.id === id)
+
+  favoriteCountries = [...favoriteCountries, countryToAdd]
+  
+  favoriteCountries.sort((a,b) => {
+    return a.name.localeCompare(b.name)
+  })
+
+  allCountries = allCountries.filter(country => country.id !== id)
+
+  render()
+}
+
+function removeFromFavorites(id) {
+  const countryToRemove = favoriteCountries.find(button => button.id === id)
+
+  allCountries = [...allCountries, countryToRemove]
+  
+  allCountries.sort((a,b) => {
+    return a.name.localeCompare(b.name)
+  })
+
+  favoriteCountries = favoriteCountries.filter(country => country.id !== id)
+
+  render()
+}
+
+function formatNumber(number) {
+  return numberFormat.format(number)
+}
